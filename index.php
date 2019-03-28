@@ -1,3 +1,5 @@
+欢迎
 <?php
-echo "主界面！";
+  $name = $_COOKIE["username"];
+echo $name;
 ?>

@@ -82,9 +82,19 @@
             return false;
         };
         var param = {
-            name:name,
+            username:name,
             password:password
         };
+        common.jsonAjax("/php/login_regist.php",param,function (data) {
+            if(data==1){
+                alert("注册成功！");
+                window.location = "login.php";
+            }else if(data==2){
+                alert("注册失败！");
+            }else if(data==3){
+                alert("用户名已存在！");
+            }
+        })
     }
 
 </script>
