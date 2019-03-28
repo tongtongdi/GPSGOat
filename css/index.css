@@ -1,0 +1,31 @@
+.label{
+    font-family:"微软雅黑","黑体","宋体";
+    font-size:22px;
+    height:36px;
+}
+.input{
+    width: 250px;
+    height: 40px;
+    margin-top: 10px;
+    font-size: 18px;
+    border-radius: 9px;
+    border: 1px solid 	#D0D0D0;
+    padding-left: 14px;
+    outline: none;
+}
+.button{
+    border-radius: 18px;
+    margin-top: 10px;
+    background-color: #14B3CE;
+    height: 40px;
+    border: 1px solid gray;
+    width:100px;
+    font-size: 18px;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+input::-webkit-input-placeholder { /* WebKit browsers */
+    font-size: 18px;
+    color: #A0A0A0;
+}

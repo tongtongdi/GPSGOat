@@ -1,3 +1,35 @@
+body{
+    background-image: url("/jpg/background.png");
+    background-repeat: no-repeat;
+    height: 100px;
+    width: 100px;
+    background-size: cover;
+    background-position:0px 150px;
+}
 #main{
-    background-color: green;
+    background: #FFFFFF;
+    width:520px;
+    height: 320px;
+    margin-top: 250px;
+    margin-left:1100px;
+    border-radius: 30px;
+    text-align: center;
+}
+#submit{
+    margin-top:20px;
+    width: 250px;
+}
+#zhuce{
+    width: 250px;
+    margin-top:20px;
+    margin-left: 62px;
+}
+#submit1{
+    width: 250px;
+}
+#zhuce1{
+    width: 250px;
+}
+.log{
+   font-size:36px; font-family:'微软雅黑';color: #000000;
 }
