@@ -14,8 +14,12 @@ if ($conn->connect_error){
     echo '数据库连接失败！';
     exit(0);
 }else{
-    $sql = "select name,password from user where name = '$_POST[username]' and password = '$_POST[password]'";
+    $sql = "select id,name,password from user where name = '$_POST[username]' and password = '$_POST[password]'";
     $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $expire=time()+60*60*2;
+        setcookie("id", $row["id"], $expire, "/");
+    }
     $number = mysqli_num_rows($result);
     if ($number) {
         $expire=time()+60*60*2;
