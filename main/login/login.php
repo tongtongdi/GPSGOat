@@ -65,7 +65,7 @@
         }
         common.jsonAjax("/php/login_check.php",param,function (data) {
             if(data==1){
-                window.location = "../../../index.php";
+                window.location = "../../index.html";
             }else if(data==2){
                 alert("用户名或密码错误！");
             }else{
