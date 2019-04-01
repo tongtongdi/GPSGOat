@@ -23,6 +23,7 @@
         开始时间：<input class="input" type="datetime-local" id="startTime"  placeholder="请选择起始时间">
         结束时间：<input class="input" type="datetime-local" id="endTime"  placeholder="请选择结束时间">
         <button class="button" type="button" onclick="loadTrackByTime()">开始回放</button>
+        <span id="realTime"></span>
     </div>
     <div id="allmap" >
 
@@ -84,7 +85,16 @@
 <script type="text/javascript">
 
     var map;
-    var points;
+    var points= [
+        {"lng":116,"lat":40,"id":8,"time":"2015-11-25 14:00:01"},
+        {"lng":117,"lat":31,"id":2,"time":"2015-11-25 14:00:11"},
+        {"lng":116,"lat":34,"id":3,"time":"2015-11-25 14:00:22"},
+        {"lng":118,"lat":39,"id":4,"time":"2015-11-25 14:00:15"},
+        {"lng":110,"lat":35,"id":5,"time":"2015-11-25 14:00:05"},
+        {"lng":119,"lat":43,"id":5,"time":"2015-11-24 14:00:05"},
+        {"lng":108,"lat":31,"id":5,"time":"2015-11-24 14:00:15"},
+        {"lng":112,"lat":35,"id":5,"time":"2015-11-24 14:00:17"}
+    ];
     var donePoints = [];
     var bPoints = [];
     var timerArr = [];//定时器
@@ -106,16 +116,17 @@
     //加载百度地图
     var loadJScript = function () {
         map = new BMap.Map("allmap");
-        var point = new BMap.Point(1234.331398,39.897445);
-        map.centerAndZoom(point,12);
+        var point = new BMap.Point(108.983487,34.383831);
+        map.centerAndZoom(point,17);
         map.enableScrollWheelZoom();//滚轮放大缩小
-        function myFun(result){
+        /*function myFun(result){
             var cityName = result.name;
             map.setCenter(cityName);
-            $("#city").html("西安市");
+
         }
         var myCity = new BMap.LocalCity();
-        myCity.get(myFun);
+        myCity.get(myFun);*/
+        $("#city").html("西安市");
     };
     //根据时间选择
     function loadTrackByTime() {
@@ -128,7 +139,7 @@
         clearInterval(interval);
         bPoints.length = 0;
         donePoints.length = 0;
-        var dateBegin = $("#startTime").val();
+        var dateBegin = document.getElementById("startTime").value.replace("T"," ");
         var dateEnd = $("#endTime").val();
 
         //从原始数组中查询符合条件的坐标点
@@ -137,8 +148,182 @@
             dateBegin: dateBegin,
             dateEnd: dateEnd
         }
-        $.jsonAjax("/main/getLocation",param,function (data) {
+        var searchRes = [];
+        common.jsonAjax("/main/getLocation.php", param, function (data) {
+            //满足条件的放上去。
+            for(var i in data){
+                searchRes.push(data[i]);
+            }
+            trackTime(dateBegin);
+            for(var j=0;j<searchRes.length;j++){
+                var wait = dateDiff(searchRes[j].time,dateBegin)*1000;
 
-        })
+                (function () {
+                    var pointAg = [searchRes[j]], timer;
+                    timer = setTimeout(function () {
+                        var doneLen = donePoints.length;
+                        var linePoints = [];
+
+                        if (doneLen != 0) {
+                            linePoints.push(donePoints[doneLen - 1]);
+                        }
+                        linePoints.push(pointAg[0]);
+                        donePoints.push(pointAg[0]);
+                        addLine(linePoints); //把原始数据的轨迹线添加到地图上。
+
+                        addMarker(pointAg);
+
+                        bPoints.push(new BMap.Point(pointAg[0].lng, pointAg[0].lat));
+                        setZoom(bPoints);
+                    }, wait);
+                    timerArr.push(timer);
+                })();
+                if(j==searchRes.length-1){
+                    setTimeout("alert('该时间段内所有的GPS信号回放结束！')", wait + 2000);
+                }
+            };
+        }, false);
+    }
+
+    //根据点信息实时更新地图显示范围，让轨迹完整显示。设置新的中心点和显示级别
+    function setZoom(bPoints){
+        var view = map.getViewport(eval(bPoints));
+        var mapZoom = view.zoom;
+        var centerPoint = view.center;
+        map.centerAndZoom(centerPoint,mapZoom);
+    }
+
+    //在轨迹点上创建图标，并添加点击事件，显示轨迹点信息。points,数组。
+    function addMarker(points){
+        var pointsLen = points.length;
+        if(pointsLen == 0){
+            return;
+        }
+        var myIcon = new BMap.Icon("/jpg/bigtrack.ico", new BMap.Size(10, 10), {
+            offset: new BMap.Size(10, 10)
+        });
+
+        // 创建标注对象并添加到地图
+        for(var i = 0;i <pointsLen;i++){
+            var point = new BMap.Point(points[i].lng,points[i].lat);
+            var marker = new BMap.Marker(point, {icon: myIcon});
+            map.addOverlay(marker);
+            (function() {
+                var thePoint = points[i];
+                marker.addEventListener("click",function(){
+                    showInfo(this,thePoint);
+                });
+            })();
+        }
+    }
+
+    //点击轨迹点后显示信息窗口
+    function showInfo(thisMaker,point){
+        var sContent =
+            "<ul style='margin:0 0 5px 0;padding:0.2em 0'>"
+            +"<li style='line-height: 26px;font-size: 15px;'>"
+            +"<span style='width: 50px;display: inline-block;'>id：</span>" + point.id + "</li>"
+            +"<li style='line-height: 26px;font-size: 15px;'><span style='width: 50px;display: inline-block;'>状态：</span>"+point.time +"</li>"
+            +"</ul>";
+        var infoWindow = new BMap.InfoWindow(sContent);  // 创建信息窗口对象
+        thisMaker.openInfoWindow(infoWindow);   //图片加载完毕重绘infowindow
+    }
+
+    //添加线
+    function addLine(points){
+        var linePoints = [];
+        var pointsLen = points.length;
+        if(pointsLen == 0){
+            return;
+        }
+        // 创建标注对象并添加到地图
+        for(var i = 0;i <pointsLen;i++){
+            linePoints.push(new BMap.Point(points[i].lng,points[i].lat));
+        }
+        var polyline = new BMap.Polyline(linePoints, {strokeColor:"red", strokeWeight:2, strokeOpacity:0.5});   //创建折线
+        map.addOverlay(polyline);   //增加折线
+    }
+
+    //显示轨迹运行的时间
+    function trackTime(beginTime) {
+        var beginTimestamp = Date.parse(new Date(beginTime));
+        interval = setInterval(function () {
+            var time = getDate(beginTimestamp).time;
+            document.getElementById('realTime').innerHTML = '回放时间' + time;
+            beginTimestamp = beginTimestamp+1000;
+        },1000);
+    }
+    //根据时间戳（毫秒），返回处理过后的时间。
+    function getDate(ms){
+        var res;
+        if(ms!=undefined){
+            var today = new Date()
+            today.setTime(ms);
+        }else{
+            var today = new Date();
+        }
+
+        var year,month,day,hour,minute,second;
+        year = today.getFullYear();
+        month = today.getMonth() + 1;
+        if(month<10){
+            month = '0'+month;
+        }
+        day = today.getDate();
+        if(day<10){
+            day = '0'+day;
+        }
+        hour = today.getHours();
+        if(hour<10){
+            hour = '0'+hour;
+        }
+        minute = today.getMinutes();
+        if(minute<10){
+            minute = '0'+minute;
+        }
+        second = today.getSeconds();
+        if(second<10){
+            second = '0'+second;
+        }
+        res={
+            'y':year,
+            'M':month,
+            'd':day,
+            'h':hour,
+            "m":minute,
+            "s":second,
+            "time":year+"-"+month+"-"+day+" "+hour+":"+minute+":"+second,
+            "date":year+"-"+month+"-"+day
+        }
+        return res;
+    }
+    //求时间差的方法
+    function dateDiff(date1, date2){
+        var type1 = typeof date1, type2 = typeof date2;
+        if(type1 == 'string')
+            date1 = stringToTime(date1);
+        else if(date1.getTime)
+            date1 = date1.getTime();
+        if(type2 == 'string')
+            date2 = stringToTime(date2);
+        else if(date2.getTime)
+            date2 = date2.getTime();
+        return (date1 - date2) / 1000;//结果是秒
+    }
+
+    //字符串转成Time(dateDiff)所需方法
+    function stringToTime(string){
+        var f = string.split(' ', 2);
+        var d = (f[0] ? f[0] : '').split('-', 3);
+        var t = (f[1] ? f[1] : '').split(':', 3);
+        return (new Date(
+            parseInt(d[0], 10) || null,
+            (parseInt(d[1], 10) || 1)-1,
+            parseInt(d[2], 10) || null,
+            parseInt(t[0], 10) || null,
+            parseInt(t[1], 10) || null,
+            parseInt(t[2], 10) || null
+        )).getTime();
+
     }
 </script>

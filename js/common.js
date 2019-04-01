@@ -20,6 +20,7 @@ var common = {
         $.ajax({
             type: "post",
             url: url,
+            ansyc: ansyc,
             data: ajaxParam,//"foo=bar1&foo=bar2"。
             dataType: "JSON",
             success: callBack,
