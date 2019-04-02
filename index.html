@@ -189,7 +189,7 @@
         if(pointsLen == 0){
             return;
         }
-        var myIcon = new BMap.Icon("/jpg/bigtrack.ico", new BMap.Size(10, 10), {
+        var myIcon = new BMap.Icon("/jpg/bigtrack3.png", new BMap.Size(10, 10), {
             offset: new BMap.Size(10, 10)
         });
 
@@ -231,7 +231,7 @@
         for(var i = 0;i <pointsLen;i++){
             linePoints.push(new BMap.Point(points[i].lng,points[i].lat));
         }
-        var polyline = new BMap.Polyline(linePoints, {strokeColor:"red", strokeWeight:2, strokeOpacity:0.5});   //创建折线
+        var polyline = new BMap.Polyline(linePoints, {strokeColor:"#CD00CD", strokeWeight:2, strokeOpacity:0.5});   //创建折线
         map.addOverlay(polyline);   //增加折线
     }
 

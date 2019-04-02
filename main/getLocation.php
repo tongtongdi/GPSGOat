@@ -15,7 +15,7 @@ if ($conn->connect_error) {
     echo '连接失败！';
     exit(0);
 }else{
-    $sql = "select lng,lat,id,time,speed from position where userId = '$_POST[id]' and time between '$_POST[dateBegin]' and '$_POST[dateEnd]'";
+    $sql = "select lng,lat,id,time,speed from positions where userId = '$_POST[id]' and time between '$_POST[dateBegin]' and '$_POST[dateEnd]'";
     $result = $conn->query($sql);
     $jarr = array();
     while ($rows=mysqli_fetch_array($result,MYSQL_ASSOC)){
